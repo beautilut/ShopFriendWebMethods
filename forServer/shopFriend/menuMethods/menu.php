@@ -15,12 +15,12 @@
 			$db=$this->DBMethods();
 			$good_name=$info['goodName'];
 			$good_price=$info['goodPrice'];
-			$good_category=$info['goodCategory'];
+			$menu_categoryID=$info['goodCategory'];
 			$good_photo=$info['photo'];
 			$good_info=$info['goodInfo'];
 			$shopID=$info['shopID'];
-			$imageFile=constant("ImageLocation").$shopID."/menu/".$good_category;
-			$sql="INSERT INTO menu (good_ID,good_category,good_name,good_price,good_photo_count,good_info,good_onsale) VALUES(null,".$good_category.",'".$good_name."','".$good_price."',".$count.",'".$good_info."',true)";
+			$imageFile=constant("ImageLocation").$shopID."/menu/".$menu_categoryID;
+			$sql="INSERT INTO menu (good_ID,menu_categoryID,good_name,good_price,good_photo_count,good_info,good_onsale) VALUES(null,".$menu_categoryID.",'".$good_name."','".$good_price."',".count($good_photo).",'".$good_info."',true)";
 			$db->query($sql);
 			$sql="select last_insert_id()";
 			$stmt=$db->query($sql);
@@ -50,7 +50,7 @@
 			$photo_oldCount=$info['oldCount'];
 			$good_name=$info['goodName'];
 			$good_price=$info['goodPrice'];
-			$good_category=$info['goodCategory'];
+			$menu_categoryID=$info['goodCategory'];
 			$good_photo=$info['photo'];
 			$good_info=$info['goodInfo'];
 			$shopID=$info['shopID'];
@@ -58,13 +58,13 @@
 			$sql="UPDATE menu SET good_name='".$good_name."',good_price='".$good_price."',good_photo_count='".$count."','".$good_info."' where good_ID='".$good_ID."'";
 			try{
 				$db->query($sql);
-				$imageFile=constant("ImageLocation").$shopID."/menu/".$good_category;
+				$imageFile=constant("ImageLocation").$shopID."/menu/".$menu_categoryID;
 				$image=$imageFile."/".$good_ID;
 				for($i=0;$i<$photo_oldCount;$i++)
 				{	
 					unlink($image.$i.".jpg");
 				}
-				for($i=0;$i<count();$i++)
+				for($i=0;$i<count($good_photo);$i++)
 				{
 					move_uploaded_file($good_photo[$i],$image.$i.".jpg");
 				}
@@ -82,11 +82,11 @@
 			//souce
 			$shopID=$info['shopID'];
 			$good_ID=$info['goodID'];
-			$good_Category=$info['goodCategory'];
+			$menu_categoryID=$info['goodCategory'];
 			$count=$info['count'];
 			//method
 			$sql="DELETE FROM menu where good_ID='".$good_ID."'";
-			$imageFile=constant("ImageLocation").$shopID."/menu/".$good_Category;
+			$imageFile=constant("ImageLocation").$shopID."/menu/".$menu_categoryID;
 			$image=$imageFile."/".$good_ID;
 			for($i=0;$i<$count;$i++)
 			{
@@ -115,7 +115,7 @@
 			for($i=0;$i<count($result);$i++)
 			{
 				$menuCategory=$result[$i]['menu_categoryID'];
-				$sql="SELECT good_ID,good_name,good_price,good_photo_count,good_info,good_rank FROM menu WHERE good_category='".$menuCategory."' order by good_rank asc";
+				$sql="SELECT good_ID,good_name,good_price,good_photo_count,good_info,good_rank FROM menu WHERE menu_categoryID='".$menuCategory."' order by good_rank asc";
 				$stmt=$db->query($sql);
 				$RowResult=$stmt->fetchall();
 				$callBackArray[$menuCategory]=$RowResult;
@@ -165,7 +165,7 @@
 		public function deleteCategory($categoryID,$shopID)
 		{
 			$db=$this->DBMethods();
-			$sql="SELECT good_md5,good_photo_count FROM menu WHERE good_category='".$categoryID."'";
+			$sql="SELECT good_ID,good_photo_count FROM menu WHERE menu_categoryID='".$categoryID."'";
 			$stmt=$db->query($sql);
 			$result=$stmt->fetchall();
 			$count=count($result);
@@ -174,13 +174,13 @@
 				$menu=$result[$i];
 				$photoCount=$menu['good_photo_count'];
 				$imageFile=constant("ImageLocation").$shopID."/menu/".$categoryID;
-				$image=$imageFile."/".$menu['good_md5'];
+				$image=$imageFile."/".$menu['good_ID'];
 				for($x=0;$x<$photoCount;$x++)
 				{
 					unlink($image.$x.".jpg");
 				}
 			}
-			$sql="DELETE FROM menu WHERE good_category='".$categoryID."'";
+			$sql="DELETE FROM menu WHERE menu_categoryID='".$categoryID."'";
 			$db->query($sql);
 			$sql="DELETE FROM menu_category WHERE menu_categoryID='".$categoryID."'";
 			try{

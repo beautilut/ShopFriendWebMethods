@@ -44,20 +44,19 @@
 		{
 		try{
 			$db=$this->DBMethods();
-			$shopID=$info['shopID'];
-			$name=$info['name'];
-			$info=$info['info'];
-			$beginTime=$info['beginTime'];
-			$endTime=$info['endTime'];
-			$useInfo=$info['userInfo'];
-			$image=$info['image'];
-			$imageLocation=constant("ImageLocation").$shopID."/coupon/".md5($info).".jpg";
+			$shopID=$info['shop_ID'];
+			$name=$info['CouponModel_Name'];
+			$couponinfo=$info['CouponModel_Info'];
+			$beginTime=$info['CouponModel_BeginTime'];
+			$endTime=$info['CouponModel_EndTime'];
+			$useInfo=$info['CouponModel_useInfo'];
+			$image=$info['CouponModel_Image'];
 			$sql;
 			if(!empty($beginTime))
 			{
-				$sql="insert into CouponModel (CouponModel_ID,CouponModel_Name,CouponModel_Info,CouponModel_BeginTime,CouponModel_EndTime,CouponModel_useInfo,CouponModel_Image) values (null,'".$name."','".$info."','".$beginTime."','".$endTime."','"$userInfo"','"$imageLocation"')";
+				$sql="insert into CouponModel (CouponModel_ID,CouponModel_Name,CouponModel_Info,CouponModel_BeginTime,CouponModel_EndTime,CouponModel_useInfo) values (null,'".$name."','".$couponinfo."','".$beginTime."','".$endTime."','".$userInfo."')";
 			}else{
-				$sql="insert into CouponModel (CouponModel_ID,CouponModel_Name,CouponModel_Info,CouponModel_EndTime,CouponModel_useInfo,CouponModel_Image) values (null,'".$name."','".$info."','".$endTime."','"$userInfo"','"$imageLocation"')";
+				$sql="insert into CouponModel (CouponModel_ID,CouponModel_Name,CouponModel_Info,CouponModel_EndTime,CouponModel_useInfo) values (null,'".$name."','".$couponinfo."','".$endTime."','".$userInfo."')";
 			}
 			$db->query($sql);
 			$couponSql="SELECT LAST_INSERT_ID()";
@@ -66,19 +65,36 @@
 			$couponID=$result[0][0];
 			if(!empty($couponID))
 			{
+				if(!empty($image))
+				{
+				$imageLocation=constant("ImageLocation").$shopID."/coupon/".$couponID.".jpg";
+				$imageSql="update CouponModel set CouponModel_Image='".$imageLocation."' where CouponModel_ID='".$couponID."'";
+				$db->query($imageSql);
 				move_uploaded_file($image,$imageLocation);
+				}
+
 				$couponShopSql="insert into CouponModel_Shop values('".$couponID."','".$shopID."')";
-				$db->query($sql);
+				$db->query($couponShopSql);
 			}
 			$callBack=array("back"=>1,"CouponID"=>$couponID);
 			$json=json_encode($callBack);
 			return $json;
 		}catch(Exception $e)
 		{
-			$callBack=array("back"=>0,"info"=$e);
+				$callBack=array("back"=>0,"info"=>$e);
 				$json=json_encode($callBack);
 				return $json;
 		}
+		}
+		public function useCoupon($info)
+		{
+			try{
+				$db=$this->DBMethods();
+				
+			}catch(Exception $e){
+				$callBack=array("back"=>0,"info"=>$e);
+				return json_encode($callBack);
+			}
 		}
 	}
 ?>
