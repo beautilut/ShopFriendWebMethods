@@ -1,41 +1,38 @@
 <?php
-	require('/mysite/shopFriend/connectDB.php');
+	header('Content-Type: text/html; charset=utf8');
+	require_once('/mysite/shopFriend/connectDB.php');
 	class pushMethods
 	{
 		public function DBMethods()
 		{
 			$connect=new connectDB();
-			$db=$connect->connectWithDB();
+			$db=$connect->connnectWithDB();
 			return $db;
-		}	
-		public function myPush($info)
-		{
-			
 		}
 		public function myPushTest($info)
 		{
 			$deviceToken=$info['deviceToken'];
 			$body=$info['body'];
 			$ctx=stream_context_create();
-			$pem="/key/ck.pem";
+			$pem=dirname( __FILE__ )."/key/ck.pem";
 			stream_context_set_option($ctx,"ssl","local_cert",$pem);
 			$pass="241495174";
 			stream_context_set_option($ctx,'ssl','passphrase',$pass);
 			$fp=stream_socket_client("ssl://gateway.sandbox.push.apple.com:2195",$err,$errstr,60,STREAM_CLIENT_CONNECT,$ctx);
 			if(!$fp)
 			{
-			return false;
+				echo 'connect fail';
+				return ;
 			}
-			//print "连接OK\n";
 			$payload=json_encode($body);
-			$msg=chr(0).pack("n",32).pack("H*)",str_replace('','',$deviceToken)).pack("n",strlen($payload)).$payload;
+			$msg=chr(0).pack("n",32).pack("H*",str_replace('','',$deviceToken)).pack("n",strlen($payload)).$payload;
 			fwrite($fp,$msg);
 			fclose($fp);
 			return true;
 		}
-		public function orderShopPush($shopID,$message)
+		public function orderShopPush($shopID,$message,$api,$data)
 		{
-			$body=array("aps"=>array("alert"=>$message),"badge"=>1,"sound"=>'default');
+			$body=array("aps"=>array("alert"=>$message,"badge"=>1,"sound"=>'default',"api"=>$api,"data"=>$data));
 			$deviceToken=$this->getDeviceToken($shopID,"shop");
 			$info=array("body"=>$body,"deviceToken"=>$deviceToken);
 			$work=$this->myPushTest($info);
@@ -46,9 +43,9 @@
 				return false;
 			}
 		}
-		public function orderUserPush($userID,$message)
+		public function orderUserPush($userID,$message,$api,$data)
 		{
-			$body=array("aps"=>array("alert"=>$message),"badge"=>1,"sound"=>'default');
+			$body=array("aps"=>array("alert"=>$message,"badge"=>1,"sound"=>'default',"api"=>$api,"data"=>$data));
 			$deviceToken=$this->getDeviceToken($userID,"user");
 			$info=array("body"=>$body,"deviceToken"=>$deviceToken);
 			$work=$this->myPushTest($info);
