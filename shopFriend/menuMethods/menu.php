@@ -26,6 +26,18 @@
 			$stmt=$db->query($sql);
 			$result=$stmt->fetchall();
 			$goodID=$result[0][0];
+			$serverArray=json_decode($info['server'],true);
+				for ($i=0;$i<count($serverArray);$i++)
+				{
+					if($serverArray[$i]['registed']==1)
+					{
+					$sql="insert into server_menu_detail select '".$serverArray[$i]['server_ID']."','".$goodID."',null from dual where not exists (select * from server_menu_detail where server_ID='".$serverArray[$i]['server_ID']."' and good_ID='".$goodID."')";
+					$db->exec($sql);
+					}else{
+					$sql="delete from server_menu_detail where server_ID='".$serverArray[$i]['server_ID']."' and good_ID='".$goodID."'";
+					$db->exec($sql);
+					}
+				}
 			$image=$imageFile."/".$goodID;
 			for($i=0;$i<count($good_photo);$i++)
 			{
@@ -67,6 +79,18 @@
 				for($i=0;$i<count($good_photo);$i++)
 				{
 					move_uploaded_file($good_photo[$i],$image.$i.".jpg");
+				}
+				$serverArray=json_decode($info['server'],true);
+				for ($i=0;$i<count($serverArray);$i++)
+				{
+					if($serverArray[$i]['registed']==1)
+					{
+					$sql="insert into server_menu_detail select '".$serverArray[$i]['server_ID']."','".$good_ID."',null from dual where not exists (select * from server_menu_detail where server_ID='".$serverArray[$i]['server_ID']."' and good_ID='".$good_ID."')";
+					$db->exec($sql);
+					}else{
+					$sql="delete from server_menu_detail where server_ID='".$serverArray[$i]['server_ID']."' and good_ID='".$good_ID."'";
+					$db->exec($sql);
+					}
 				}
 				$callBack=array("back"=>1);
 				$json=json_encode($callBack);

@@ -12,6 +12,7 @@
 	$info['goodCategory']=$_POST['goodCategory'];
 	$info['photoCount']=$_POST['photoCount'];
 	$info['goodInfo']=$_POST['goodInfo'];
+	$info['server']=$_POST['server'];
 	$array=array();
 	for($i=0;$i<$info['photoCount'];$i++)
 	{

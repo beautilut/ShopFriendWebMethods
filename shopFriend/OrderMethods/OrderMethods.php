@@ -15,8 +15,12 @@
 			$db=$this->DBMethods();
 			//data
 			$shopID=$info['shop_ID'];
+			$shopName=$info['shop_name'];
 			$userID=$info['user_ID'];
+			$userName=$info['user_name'];
+			$userLocation=$info['user_location'];
 			$serverID=$info['server_ID'];
+			$orderTotalPrice;
 			$orderDetailArray=json_decode($info['orderDetail'],true);
 			//
 			date_default_timezone_set("Asia/Shanghai");
@@ -25,7 +29,12 @@
 			{
 				return ;
 			}
-			$sql="insert into OrderTable (order_ID,order_createtime,server_ID,user_ID,shop_ID,order_status) values (null,'".$time."','".$serverID."','".$userID."','".$shopID."',1)";
+			for($i=0;$i<count($orderDetailArray);$i++)
+			{
+				$piecePrice=$orderDetailArray[$i]['good_price'];
+				$orderTotalPrice=$orderTotalPrice+$piecePrice;			
+			}
+			$sql="insert into orderTable (order_ID,order_createtime,server_ID,user_ID,user_name,user_location,shop_ID,shop_name,order_status,order_total_price) values (null,'".$time."','".$serverID."','".$userID."','".$userName."','".$userLocation."','".$shopID."','".$shopName."',1,'".$orderTotalPrice."')";
 			$db->query($sql);
 			$orderSQL="SELECT LAST_INSERT_ID()";
 			$stmt=$db->query($orderSQL);
@@ -39,7 +48,8 @@
 					$good_ID=$orderDetailArray[$i]['good_ID'];
 					$good_number=$orderDetailArray[$i]['good_number'];
 					$good_price=$orderDetailArray[$i]['good_price'];
-					$orderDetailSQL="insert into OrderDetail (order_ID,good_ID,good_number,good_price) values ('".$orderID."','".$good_ID."','".$good_number."','".$good_price."')";
+					$good_name=$orderDetailArray[$i]['good_name'];
+					$orderDetailSQL="insert into orderDetail (order_ID,good_ID,good_name,good_number,good_price) values ('".$orderID."','".$good_ID."','".$good_name."','".$good_number."','".$good_price."')";
 					$db->query($orderDetailSQL);
 				}
 			}
@@ -72,7 +82,7 @@
 			{
 				return;
 			}
-			$sql="update OrderTable set order_status='".$orderStatus."' where order_ID='".$orderID."'";
+			$sql="update orderTable set order_status='".$orderStatus."' where order_ID='".$orderID."'";
 			$db->query($sql);
 			$push=new pushMethods;
 			$message="订单状态更新";
@@ -98,9 +108,9 @@
 			try{
 			$db=$this->DBMethods();
 			//data
-			$sql="select * from OrderTable where user_ID='".$userID."'";
+			$sql="select * from orderTable where user_ID='".$userID."'";
 			$stmt=$db->query($sql);
-			$result=$stmt->fetchObject();
+			$result=$stmt->fetchAll();
 			$backArray=array("back"=>1,"order"=>$result);
 			return json_encode($backArray);
 			}catch(Exception $e)
@@ -114,9 +124,9 @@
 			try{
 			$db=$this->DBMethods();
 			//data
-			$sql="select * from OrderTable where shop_ID='".$shopID."'";
+			$sql="select * from orderTable where shop_ID='".$shopID."'";
 			$stmt=$db->query($sql);
-			$result=$stmt->fetchObject();
+			$result=$stmt->fetchAll();
 			$backArray=array("back"=>1,"order"=>$result);
 			return json_encode($backArray);
 			}catch(Exception $e)
@@ -134,10 +144,39 @@
 				{
 					return ;
 				}
-				$sql="select * from OrderTable,OrderDetail,ServerTable where OrderTable.server_ID=ServerTable.server_ID and OrderTable.order_ID=OrderDetail.order_ID and OrderTable.order_ID='".$orderID."'";
+				$backArray=array("back"=>1);
+				$sql="select * from orderTable,serverTable where orderTable.server_ID=serverTable.server_ID and order_ID='".$orderID."'";
 				$stmt=$db->query($sql);
-				$result=$stmt->fetchObject();
-				$backArray=array("back"=>1,"order"=>$result);
+				$backArray['order']=$stmt->fetchObject();
+				$sql="select * from orderDetail where order_ID='".$orderID."'";
+				$stmt=$db->query($sql);
+				$backArray['orderDetail']=$stmt->fetchAll();
+				return json_encode($backArray);
+			}catch(Exception $e)
+			{
+				$backArray=array("back"=>0);
+				return json_encode($backArray);
+			}
+		}
+		public function getAllOrders($info)
+		{
+			try{
+				$db=$this->DBMethods();
+				//data
+				$shopID=$info['shop_ID'];
+				//
+				$backArray=array("back"=>1);
+				$sql="select * from orderTable as o,serverTable as s where o.server_ID=s.server_ID and o.shop_ID='".$shopID."' and order_status<3 and order_status !=0 order by order_createtime asc";
+				$stmt=$db->query($sql);
+				$orderList=$stmt->fetchall();
+				for($i=0;$i<count($orderList);$i++)
+				{
+					$sql="select * from orderDetail where order_ID='".$orderList[$i]['order_ID']."'";
+					$stmt=$db->query($sql);
+					$result=$stmt->fetchall();
+					$orderList[$i]['detail']=$result;
+				}
+				$backArray['order']=$orderList;
 				return json_encode($backArray);
 			}catch(Exception $e)
 			{

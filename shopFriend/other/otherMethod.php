@@ -32,12 +32,22 @@
 			}
 			}
 		}
-		public function getInvitation($phoneNumber)
+		public function getInvitation($info)
 		{
-		if(!empty($phoneNumber))
+		if(!empty($info))
 		{
 			$db=$this->DBMethods();
+			//data
+			$phoneNumber=$info['phone'];
+			$kind=$info['kind'];
+			$sql;
+			if($kind=="shop")
+			{
+			$sql="select invitation_number,used from shop_invitation where phone_number='".$phoneNumber."'";
+			}else{
 			$sql="select invitation_number,used from invitation where phone_number='".$phoneNumber."'";
+			}	
+			echo $sql;
 			$stmt=$db->query($sql);
 			$result=$stmt->fetchall();
 			$array=array();
@@ -53,7 +63,13 @@
     				$rndcode=rand(0,9);
 			    	$rndstr.=$str[$rndcode];
     			}	
+    			$insertSql;
+    			if($kind=="shop")
+				{	
+				$insertSql="insert into shop_invitation (phone_number,invitation_number,used) Values('".$phoneNumber."','".$rndstr."',false)";
+				}else{
 				$insertSql="insert into invitation (phone_number,invitation_number,used) Values('".$phoneNumber."','".$rndstr."',false)";
+				}
 				$db->query($insertSql);
 				$array['param1']=$rndstr;
 			}
@@ -102,10 +118,16 @@
 		    curl_close($ch);
 		    return $data;
 		}
-		function checkInvitation($phoneNumber,$invitationNumber)
+		function checkInvitation($phoneNumber,$invitationNumber,$kind)
 		{
 			$db=$this->DBMethods();
+			$sql;
+			if($kind=="shop")
+			{
+			$sql="select invitation_number,used from shop_invitation where phone_number='".$phoneNumber."'";
+			}else{
 			$sql="select invitation_number,used from invitation where phone_number='".$phoneNumber."'";
+			}
 			$stmt=$db->query($sql);
 			$result=$stmt->fetchall();
 			$back=array();
@@ -116,7 +138,7 @@
 				if($result[0]['used']==1)
 				{
 				$back['result']=0;
-				$back['note']="该邀请码已被激活";
+				$back['note']="该验证码已被激活";
 				}else
 				{
 					$back['result']=1;
@@ -124,11 +146,11 @@
 			}else
 			{
 				$back['result']=0;
-				$back['note']="邀请码错误";
+				$back['note']="验证码错误";
 			}
 			}else{
 				$back['result']=0;
-				$back['note']="此号码尚未拥有邀请码";
+				$back['note']="此号码尚未拥有验证码";
 			}
 			return $back;
 		}
