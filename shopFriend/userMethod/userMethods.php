@@ -24,7 +24,7 @@
 			return;
 			}
 			$userPhone=$userInfo['userPhone'];
-			$sql="INSERT INTO user (user_ID,user_name,user_password,user_email,user_phone,user_sex,user_birthday) VALUES(null,'".$userName."','".$userPassword."',null,'".$userPhone."',null,null)";
+			$sql="INSERT INTO user (user_ID,user_name,user_password,user_email,user_phone,user_sex,user_birthday) VALUES(xnull,'".$userName."','".$userPassword."',null,'".$userPhone."',null,null)";
 			$db->query($sql);
 			$userIDsql="SELECT LAST_INSERT_ID()";
 			$stmt=$db->query($userIDsql);
